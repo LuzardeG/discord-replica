@@ -30,12 +30,15 @@ app.use("/messages", messageRoutes);
 app.use("/friends", friendRoutes);
 app.use("/dms", dmRoutes);
 
-// Serve static client in production
+// Serve static client in production (only if built locally)
+import fs from "fs";
 const clientDist = path.resolve("../../client/dist");
-app.use(express.static(clientDist));
-app.get("*", (_req, res) => {
-  res.sendFile(path.join(clientDist, "index.html"));
-});
+if (fs.existsSync(clientDist)) {
+  app.use(express.static(clientDist));
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(clientDist, "index.html"));
+  });
+}
 
 // WebSocket
 setupWS(wss);
