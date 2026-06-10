@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  username     String   @unique
+  passwordHash String   @map("password_hash")
+  status       String   @default("online")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  ownedServers       Server[]
+  memberships        ServerMember[]
+  messages           Message[]
+  sentFriendReqs     FriendRequest[] @relation("Requester")
+  receivedFriendReqs FriendRequest[] @relation("Receiver")
+  friendships1       Friendship[]    @relation("User1")
+  friendships2       Friendship[]    @relation("User2")
+  dmChannels1        DmChannel[]     @relation("DmUser1")
+  dmChannels2        DmChannel[]     @relation("DmUser2")
+  dmMessages         DmMessage[]
+
+  @@map("users")
+}
+
+model Server {
+  id        String   @id @default(uuid())
+  name      String
+  icon      String?
+  ownerId   String   @map("owner_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  owner   User           @relation(fields: [ownerId], references: [id])
+  members ServerMember[]
+  channels Channel[]
+
+  @@map("servers")
+}
+
+model ServerMember {
+  id       String   @id @default(uuid())
+  userId   String   @map("user_id")
+  serverId String   @map("server_id")
+  role     String   @default("member")
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, serverId])
+  @@map("server_members")
+}
+
+model Channel {
+  id        String   @id @default(uuid())
+  name      String
+  type      String
+  serverId  String   @map("server_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  server   Server    @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@map("channels")
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  channelId String   @map("channel_id")
+  authorId  String   @map("author_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id])
+
+  @@index([channelId, createdAt])
+  @@map("messages")
+}
+
+model FriendRequest {
+  id          String   @id @default(uuid())
+  requesterId String   @map("requester_id")
+  receiverId  String   @map("receiver_id")
+  status      String   @default("pending")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  requester User @relation("Requester", fields: [requesterId], references: [id], onDelete: Cascade)
+  receiver  User @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, receiverId])
+  @@map("friend_requests")
+}
+
+model Friendship {
+  id        String   @id @default(uuid())
+  user1Id   String   @map("user1_id")
+  user2Id   String   @map("user2_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user1 User @relation("User1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2 User @relation("User2", fields: [user2Id], references: [id], onDelete: Cascade)
+
+  @@unique([user1Id, user2Id])
+  @@map("friendships")
+}
+
+model DmChannel {
+  id        String   @id @default(uuid())
+  user1Id   String   @map("user1_id")
+  user2Id   String   @map("user2_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user1    User        @relation("DmUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2    User        @relation("DmUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+  messages DmMessage[]
+
+  @@unique([user1Id, user2Id])
+  @@map("dm_channels")
+}
+
+model DmMessage {
+  id          String   @id @default(uuid())
+  dmChannelId String   @map("dm_channel_id")
+  authorId    String   @map("author_id")
+  content     String
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  dmChannel DmChannel @relation(fields: [dmChannelId], references: [id], onDelete: Cascade)
+  author    User      @relation(fields: [authorId], references: [id])
+
+  @@index([dmChannelId, createdAt])
+  @@map("dm_messages")
+}
