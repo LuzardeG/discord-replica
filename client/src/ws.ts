@@ -62,10 +62,11 @@ export function connect() {
   const token = getToken();
   if (!token) return;
 
-  const host = window.location.hostname;
-  const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const wsPort = import.meta.env.PROD ? "" : ":3001";
-  const url = `${wsProtocol}//${host}${wsPort}/ws?token=${token}`;
+  const isProd = import.meta.env.PROD;
+  const wsProtocol = isProd ? "wss:" : "ws:";
+  const wsHost = isProd ? "discord-replica-server.onrender.com" : window.location.hostname;
+  const wsPort = isProd ? "" : ":3001";
+  const url = `${wsProtocol}//${wsHost}${wsPort}/ws?token=${token}`;
 
   function go() {
     ws = new WebSocket(url);

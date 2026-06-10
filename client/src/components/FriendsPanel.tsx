@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { getToken } from "../auth";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const API = import.meta.env.VITE_API_URL || "https://discord-replica-server.onrender.com";
 
 interface Friend {
   id: string;

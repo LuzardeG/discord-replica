@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useStore } from "../store";
 import { getToken } from "../auth";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const API = import.meta.env.VITE_API_URL || "https://discord-replica-server.onrender.com";
 
 export function DMMessageInput() {
   const [text, setText] = useState("");
